@@ -152,23 +152,23 @@ echo ""
 dateToGoTotalVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoTotalVaccinated)))
 dateToGoTotalWillingVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoTotalWillingVaccinated)))
 dateToGoTotalImmunityVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoTotalImmunityVaccinated)))
-printf "as viewed by total doses, all population will be vaccinated at: $dateToGoTotalVaccinated\n"
-printf "as viewed by total doses, willing $WILLINGPERSONSPERC %% will be vaccinated at: $dateToGoTotalWillingVaccinated\n"
-printf "as viewed by total doses, immunity of $IMMUNITYPERC %% will be vaccinated at: $dateToGoTotalImmunityVaccinated\n"
+printf "as viewed by total doses, all population will be vaccinated at:\t$dateToGoTotalVaccinated\n"
+printf "as viewed by total doses, willing $WILLINGPERSONSPERC %% will be vaccinated at:\t$dateToGoTotalWillingVaccinated\n"
+printf "as viewed by total doses, immunity $IMMUNITYPERC %% will be vaccinated at:\t$dateToGoTotalImmunityVaccinated\n"
 echo ""
 dateToGoFirstVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoFirstVaccinated)))
 dateToGoFirstWillingVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoFirstWillingVaccinated)))
 dateToGoFirstImmunityVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoFirstImmunityVaccinated)))
-printf "as viewed by total doses, all population will be vaccinated at: $dateToGoFirstVaccinated\n"
-printf "as viewed by total doses, willing $WILLINGPERSONSPERC %% will be vaccinated at: $dateToGoFirstWillingVaccinated\n"
-printf "as viewed by total doses, immunity of $IMMUNITYPERC %% will be vaccinated at: $dateToGoFirstImmunityVaccinated\n"
+printf "as viewed by total doses, all population will be vaccinated at:\t$dateToGoFirstVaccinated\n"
+printf "as viewed by total doses, willing $WILLINGPERSONSPERC %% will be vaccinated at:\t$dateToGoFirstWillingVaccinated\n"
+printf "as viewed by total doses, immunity $IMMUNITYPERC %% will be vaccinated at:\t$dateToGoFirstImmunityVaccinated\n"
 echo ""
 dateToGoBothVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoBothVaccinated)))
 dateToGoBothWillingVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoBothWillingVaccinated)))
 dateToGoBothImmunityVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoBothImmunityVaccinated)))
-printf "as viewed by total doses, all population will be vaccinated at: $dateToGoBothVaccinated\n"
-printf "as viewed by total doses, willing $WILLINGPERSONSPERC %% will be vaccinated at: $dateToGoBothWillingVaccinated\n"
-printf "as viewed by total doses, immunity of $IMMUNITYPERC %% will be vaccinated at: $dateToGoBothImmunityVaccinated\n"
+printf "as viewed by total doses, all population will be vaccinated at:\t$dateToGoBothVaccinated\n"
+printf "as viewed by total doses, willing $WILLINGPERSONSPERC %% will be vaccinated at:\t$dateToGoBothWillingVaccinated\n"
+printf "as viewed by total doses, immunity $IMMUNITYPERC %% will be vaccinated at:\t$dateToGoBothImmunityVaccinated\n"
 echo ""
 
 # remove unnesseccary resource files

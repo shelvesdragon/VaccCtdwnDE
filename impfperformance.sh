@@ -159,16 +159,16 @@ echo ""
 dateToGoFirstVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoFirstVaccinated)))
 dateToGoFirstWillingVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoFirstWillingVaccinated)))
 dateToGoFirstImmunityVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoFirstImmunityVaccinated)))
-printf "as viewed by total doses, all population will be vaccinated at:\t$dateToGoFirstVaccinated\n"
-printf "as viewed by total doses, willing $WILLINGPERSONSPERC %% will be vaccinated at:\t$dateToGoFirstWillingVaccinated\n"
-printf "as viewed by total doses, immunity $IMMUNITYPERC %% will be vaccinated at:\t$dateToGoFirstImmunityVaccinated\n"
+printf "as viewed by first doses, all population will be vaccinated at:\t$dateToGoFirstVaccinated\n"
+printf "as viewed by first doses, willing $WILLINGPERSONSPERC %% will be vaccinated at:\t$dateToGoFirstWillingVaccinated\n"
+printf "as viewed by first doses, immunity $IMMUNITYPERC %% will be vaccinated at:\t$dateToGoFirstImmunityVaccinated\n"
 echo ""
 dateToGoBothVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoBothVaccinated)))
 dateToGoBothWillingVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoBothWillingVaccinated)))
 dateToGoBothImmunityVaccinated=$(date --date=@$(($TODAYSEC + 86400 * $daysToGoBothImmunityVaccinated)))
-printf "as viewed by total doses, all population will be vaccinated at:\t$dateToGoBothVaccinated\n"
-printf "as viewed by total doses, willing $WILLINGPERSONSPERC %% will be vaccinated at:\t$dateToGoBothWillingVaccinated\n"
-printf "as viewed by total doses, immunity $IMMUNITYPERC %% will be vaccinated at:\t$dateToGoBothImmunityVaccinated\n"
+printf "as viewed by second doses, all population will be vaccinated at:\t$dateToGoBothVaccinated\n"
+printf "as viewed by second doses, willing $WILLINGPERSONSPERC %% will be vaccinated at:\t$dateToGoBothWillingVaccinated\n"
+printf "as viewed by second doses, immunity $IMMUNITYPERC %% will be vaccinated at:\t$dateToGoBothImmunityVaccinated\n"
 echo ""
 
 # remove unnesseccary resource files

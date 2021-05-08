@@ -1,17 +1,52 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
+import javax.net.ssl.HttpsURLConnection;
+
 public class Main {
   public static void main(String[] args) throws IOException {
-    ArrayList<Vaccine> listOfVaccines = readVaccines("res/vaccines.csv");
+    // get the .tsv from RKI
+    String vaccinationTimeSeriesURLString = "https://impfdashboard.de/static/data/germany_vaccinations_timeseries_v2.tsv";
+    String vaccinationTimeSeriesFileNameString = "res/germany_vaccinations_timeseries_v2.tsv";
+    String vaccinesFileNameString = "res/vaccines.csv";
+    try {
+      URL vaccinationTimeSeriesURL = new URL(vaccinationTimeSeriesURLString);
+      HttpsURLConnection httpsConnection = (HttpsURLConnection)vaccinationTimeSeriesURL.openConnection();
+      try {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(httpsConnection.getInputStream()));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(vaccinationTimeSeriesFileNameString));
+        String lineURLToFile = reader.readLine();
+        while(lineURLToFile!= null) {
+          writer.write(lineURLToFile);
+          writer.newLine();
+          lineURLToFile = reader.readLine();
+        }
+        writer.flush();
+        reader.close();
+        writer.close();
+      } catch (IOException e) {
+        System.err.println("Error in reading and writing timeseries, check URL and fileName");
+        e.printStackTrace();
+      }
+    } catch (MalformedURLException e) {
+      System.err.println("Error in vaccination timeseries URL");
+      e.printStackTrace();
+    }
+    
+    ArrayList<Vaccine> listOfVaccines = readVaccines(vaccinesFileNameString);
     for (Vaccine vaccine : listOfVaccines) {
       System.out.println(vaccine);
     }
     // TODO define a way to calculate the full protection of each vaccine
-    ArrayList<VaccinationDay> listOfDays = readVaccinationDays("res/germany_vaccinations_timeseries_v2.tsv");
+    ArrayList<VaccinationDay> listOfDays = readVaccinationDays(vaccinationTimeSeriesFileNameString);
     System.out.println(listOfDays.get(listOfDays.size() - 1));
     // TODO number of cumulated second doses
     // TODO number of fully protected

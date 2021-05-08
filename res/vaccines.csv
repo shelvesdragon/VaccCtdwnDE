@@ -1,0 +1,4 @@
+Name,Hersteller,Impfstofftyp,Dosenzahl,"Spaltennr Zweitdosen (kum, 1 indiz.)",max. Tage nach letzter Dosis bis Vollschutz,min. Tage nach letzter Dosis bis Vollschutz,max. Tage nach Dosis,min. Tage nach Dosis,Quellen
+Comirnaty,Biontech/Pfizer,mRNA,2,29,7,7,42-7,21-7,https://www.kbv.de/media/sp/COVID-19-Schutzimpfung_Steckbrief_Impfstoff_Comirnaty.pdf
+Vaxzevria,AstraZeneca/Universität Oxford,Vektor,2,33,15,15,112-15,28-15,https://www.kbv.de/media/sp/COVID-19-Schutzimpfung_Steckbrief_Impfstoff_AstraZeneca.pdf
+Janssen,Johnson & Johnson/Janssen-Cilag,Vektor,1,27,28,28,28,28,https://www.kbv.de/media/sp/COVID-19-Impfung_Steckbrief_Impfstoff_Janssen.pdf

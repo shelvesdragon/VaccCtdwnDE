@@ -12,50 +12,107 @@ import java.util.ArrayList;
 import javax.net.ssl.HttpsURLConnection;
 
 public class Main {
+  private static final double MINIMUM_HERD_IMMUNITY_DECIMAL = 0.70;
+  private static final String PERCENTAGE_OF_FULLY_VACCINATED_PERSONS = "Percentage of fully vaccinated persons: ";
+  private static final int POPULATION_GERMANY = 83190556; // https://www.destatis.de/DE/Themen/Gesellschaft-Umwelt/Bevoelkerung/Bevoelkerungsstand/Tabellen/zensus-geschlecht-staatsangehoerigkeit-2020.html
+  private static final String FULLY_VACCINATED_PERSONS = "Fully vaccinated persons: ";
+  private static final String VACCINES_CSV_FILENAME = "res/vaccines.csv";
+  private static final String TIMESERIES_FILENAME = "res/germany_vaccinations_timeseries_v2.tsv";
+  private static final String TIMESERIES_URL = "https://impfdashboard.de/static/data/germany_vaccinations_timeseries_v2.tsv";
+  private static final String ERROR_IN_READING_AND_WRITING_TIMESERIES_CHECK_URL_AND_FILENAME = "Error in reading and writing timeseries, check URL and fileName";
+  private static final String ERROR_IN_VACCINATION_TIMESERIES_URL = "Error in vaccination timeseries URL";
+  private static final String TIMESERIES_DOWNLOAD_SUCCESSFUL = "Timeseries download successful.";
+
   public static void main(String[] args) throws IOException {
+    
     // get the .tsv from RKI
-    String vaccinationTimeSeriesURLString = "https://impfdashboard.de/static/data/germany_vaccinations_timeseries_v2.tsv";
-    String vaccinationTimeSeriesFileNameString = "res/germany_vaccinations_timeseries_v2.tsv";
-    String vaccinesFileNameString = "res/vaccines.csv";
-    try {
-      URL vaccinationTimeSeriesURL = new URL(vaccinationTimeSeriesURLString);
-      HttpsURLConnection httpsConnection = (HttpsURLConnection)vaccinationTimeSeriesURL.openConnection();
-      try {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(httpsConnection.getInputStream()));
-        BufferedWriter writer = new BufferedWriter(new FileWriter(vaccinationTimeSeriesFileNameString));
-        String lineURLToFile = reader.readLine();
-        while(lineURLToFile!= null) {
-          writer.write(lineURLToFile);
-          writer.newLine();
-          lineURLToFile = reader.readLine();
-        }
-        writer.flush();
-        reader.close();
-        writer.close();
-      } catch (IOException e) {
-        System.err.println("Error in reading and writing timeseries, check URL and fileName");
-        e.printStackTrace();
-      }
-    } catch (MalformedURLException e) {
-      System.err.println("Error in vaccination timeseries URL");
-      e.printStackTrace();
+    double minHerdImmunityDecimal = 0.70; // = 70% basic number, no dispersion, mutation, etc. according to https://www.quarks.de/gesundheit/medizin/warum-ein-impfstoff-die-pandemie-auch-2021-nicht-beendet/
+    /* https://www.quarks.de/gesundheit/medizin/warum-ein-impfstoff-die-pandemie-auch-2021-nicht-beendet/
+     * Please take a close look at this article, because 70% is technically too low and doesn't take important effects into account.
+     * The article explains them and also why herd immunity is probably not reachable for COVID-19 and/or will take a longer time.
+     * It also explains why vaccines are still important to get:
+     * Protect yourself and others against death, Long-COVID, hospitalisation, etc.
+     * Again, this is not a predicition, it is only calculated from past performance.
+     * 
+     * This does not take willingness of population to get the vaccine into account:
+     * https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Projekte_RKI/covimo_studie_Ergebnisse.html
+     * since no data for population below the age of 18 is available and vaccines are available for ages 16 and up (2021-08-05)
+     */
+    if (args.length == 0 || !(args[0].equals("noTimeSeriesUpdate"))) {
+      getTimeSeriesFromRKI();
     }
     
-    ArrayList<Vaccine> listOfVaccines = readVaccines(vaccinesFileNameString);
+    ArrayList<Vaccine> listOfVaccines = readVaccines(VACCINES_CSV_FILENAME);
     for (Vaccine vaccine : listOfVaccines) {
       System.out.println(vaccine);
     }
-    // TODO define a way to calculate the full protection of each vaccine
-    ArrayList<VaccinationDay> listOfDays = readVaccinationDays(vaccinationTimeSeriesFileNameString);
-    System.out.println(listOfDays.get(listOfDays.size() - 1));
-    // TODO number of cumulated second doses
+    /* A person is fully vaccinated when:
+    * - they got their last dose
+    * A person is fully protected when:
+    * - after they got their last dose and
+    * - the days until the full/last data point in research on efficacy have passed
+    * - a fully protected person may not be 100 % protected against the virus, due to the vaccines efficacy <100%, but
+    * - the vaccine is likely to have reached its full potential
+    * The number of fully vaccinated persons is easily read from the last row in the timeseries
+    * The last number of fully protected persons is the number of last doses of each vaccine:
+    * Sum of last doses of row number (last row minus days after last dose was given), for each vaccine.
+    * Consider vaccine A and vaccine B in with number of last doses in last row 27.
+    * Let vaccine A take 5 days to develop its full protection after the last dose.
+    * Let vaccine B take 7 days to develop its full protection after the last dose.
+    * Then the number x of all fully protected persons for A is in row 27 - 5 = 22.
+    * The number y of all fully protected persons for B is in row 27 - 7 = 20.
+    * The number of all fully protected persons for A and B is x + y.
+    * Since it takes different numbers of doses to get the full protection of a vaccine for different vaccines,
+    * the overall numbers of doses given does not say much about how many persons have a full protection.
+    * It may be more important when looking at delivered doses vs. vaccinated doses and planning ahead.
+    * The number of first doses in vaccines with two or more do not matter as much to determine protection of population.
+    * While persons with one or more of several does of their vaccine may already have some protection, efficacy varies between
+    * different vaccines. It may however be a good number for planning and determining requirements of needed second & additional doses.
+    * Therefore, the important numbers are the last doses of each vaccine and the days until full protection is reached.
+    */
+    // TODO implement number of fully protected persons
+    ArrayList<VaccinationDay> listOfDays = readVaccinationDays(TIMESERIES_FILENAME);
+    // number of fully vaccinated persons
+    int cumulatedFullyVaccinatedPersons = listOfDays.get(listOfDays.size() - 1).personsFullCumulative;
+    System.out.println(FULLY_VACCINATED_PERSONS + cumulatedFullyVaccinatedPersons);
     // TODO number of fully protected
-    // TODO % of whole population
+    // bio pf = 6059737
+    // astra = 16986
+    // jannsen = 0
+    // moderna = 339542
+    // sum = 6416265
+    int maxFullyProtectedPersons = 0;
+    int minFullyProtectedPersons = 0;
+    for (int i = 0; i < listOfVaccines.size(); i++) {
+      // maximum full portection through minimum days to go back
+      int maxProtectionDays = (listOfDays.size() - 1) - listOfVaccines.get(i).getMinimumDaysFullProtection();
+      int minProtectionDays = (listOfDays.size() - 1) - listOfVaccines.get(i).getMaximumDaysFullProtection();
+      int colummnNumber = listOfVaccines.get(i).getColumnNumberSecondDoses() - 1; // indexOffset and date
+      if (maxProtectionDays >= 0) {
+        if (colummnNumber < 9) {
+          maxFullyProtectedPersons += listOfDays.get(maxProtectionDays).firstHalf[colummnNumber];
+        } else {
+          maxFullyProtectedPersons += listOfDays.get(maxProtectionDays).secondHalf[colummnNumber - 11];
+        }
+      }
+      if (minProtectionDays >= 0) {
+        if (colummnNumber < 9) {
+          minFullyProtectedPersons += listOfDays.get(minProtectionDays).firstHalf[colummnNumber];
+        } else {
+          minFullyProtectedPersons += listOfDays.get(minProtectionDays).secondHalf[colummnNumber - 11];
+        }
+      }
+    }
+    System.err.println(maxFullyProtectedPersons);
+    System.err.println(minFullyProtectedPersons);
+    // TODO % of whole population (fully protected)
+    double percentageFullyVaccinatedPersons = 100.0 * ((double)cumulatedFullyVaccinatedPersons / POPULATION_GERMANY);
+    System.out.println(PERCENTAGE_OF_FULLY_VACCINATED_PERSONS + percentageFullyVaccinatedPersons);
     // TODO number of immunity in 70 % of population
     // TODO date/time until 70% population gets second dose
     // TODO date/time until 70% population is fully protected, weighted against current percentage of vaccines
     // TODO date/time until whole population gets second dose
-    // TODO date/time until whole population is fully protected, weighted against current percentage of vaccines
+    // TODO date/time until whole population is fully protected, weighted against current percentage of vaccines and with longest 
     /*
     * # total doeses already vaccinated
     col=2 # in this collumn
@@ -217,6 +274,33 @@ public class Main {
     */
   }
   
+  private static void getTimeSeriesFromRKI() throws IOException {
+    try {
+      URL vaccinationTimeSeriesURL = new URL(TIMESERIES_URL);
+      HttpsURLConnection httpsConnection = (HttpsURLConnection)vaccinationTimeSeriesURL.openConnection();
+      try {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(httpsConnection.getInputStream()));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(TIMESERIES_FILENAME));
+        String lineURLToFile = reader.readLine();
+        while(lineURLToFile!= null) {
+          writer.write(lineURLToFile);
+          writer.newLine();
+          lineURLToFile = reader.readLine();
+        }
+        writer.flush();
+        reader.close();
+        writer.close();
+      } catch (IOException e) {
+        System.err.println(ERROR_IN_READING_AND_WRITING_TIMESERIES_CHECK_URL_AND_FILENAME);
+        e.printStackTrace();
+      }
+    } catch (MalformedURLException e) {
+      System.err.println(ERROR_IN_VACCINATION_TIMESERIES_URL);
+      e.printStackTrace();
+    }
+    System.err.println(TIMESERIES_DOWNLOAD_SUCCESSFUL);
+  }
+
   public static ArrayList<Vaccine> readVaccines(String vaccineFileName) throws IOException {
     ArrayList<Vaccine> listOfVaccines = new ArrayList<Vaccine>();
     BufferedReader reader = new BufferedReader(new FileReader(vaccineFileName));
@@ -273,11 +357,49 @@ public class Main {
     while (dayString != null) {
       dayStringArray = dayString.split("\t");
       LocalDate dayDateFromString = LocalDate.parse(dayStringArray[0]);
-      System.out.println(dayDateFromString);
+      // System.err.println(dayDateFromString);
       int dosesCumul = Integer.parseInt(dayStringArray[1]);
-      System.out.println(dayStringArray[1]);
-      System.out.println();
-      vaccDay = new VaccinationDay(dayDateFromString, dosesCumul);
+      // System.err.println(dayStringArray[1]);
+      // System.err.println();
+      int dosesDiffPrev = Integer.parseInt(dayStringArray[2]);
+      int dosesFirstDiffPrev = Integer.parseInt(dayStringArray[3]);
+      int dosesSecondDiffPrev = Integer.parseInt(dayStringArray[4]);
+      int dosesBiontechCumul = Integer.parseInt(dayStringArray[5]);
+      int dosesModernaCumul = Integer.parseInt(dayStringArray[6]);
+      int dosesAstraZenecaCumul = Integer.parseInt(dayStringArray[7]);
+      int personsFirstCumul = Integer.parseInt(dayStringArray[8]);
+      int personsFullCumul = Integer.parseInt(dayStringArray[9]);
+      double vaccRateFirst = Double.parseDouble(dayStringArray[10]);
+      double vaccRateFull = Double.parseDouble(dayStringArray[11]);
+      int indicAgeDoses = Integer.parseInt(dayStringArray[12]);
+      int indicProfDoses = Integer.parseInt(dayStringArray[13]);
+      int indicMedicalDoses = Integer.parseInt(dayStringArray[14]);
+      int indicCareHomeDoses = Integer.parseInt(dayStringArray[15]);
+      int indicAgeFirst = Integer.parseInt(dayStringArray[16]);
+      int indicProfFirst = Integer.parseInt(dayStringArray[17]);
+      int indicMedicalFirst = Integer.parseInt(dayStringArray[18]);
+      int indicCareHomeFirst = Integer.parseInt(dayStringArray[19]);
+      int indicAgeFull = Integer.parseInt(dayStringArray[20]);
+      int indicProfFull = Integer.parseInt(dayStringArray[21]);
+      int indicMedicalFull = Integer.parseInt(dayStringArray[22]);
+      int indicCareHomeFull = Integer.parseInt(dayStringArray[23]);
+      int dosesDimCumul = Integer.parseInt(dayStringArray[24]);
+      int dosesKbvCumul = Integer.parseInt(dayStringArray[25]);
+      int dosesJohnsonCumul = Integer.parseInt(dayStringArray[26]);
+      int dosesBiontechFirstCumul = Integer.parseInt(dayStringArray[27]);
+      int dosesBiontechSecondCumul = Integer.parseInt(dayStringArray[28]);
+      int dosesModernaFirstCumul = Integer.parseInt(dayStringArray[29]);
+      int dosesModernaSecondCumul = Integer.parseInt(dayStringArray[30]);
+      int dosesAstraZenecaFirstCumul = Integer.parseInt(dayStringArray[31]);
+      int dosesAstraZenecaSecondCumul = Integer.parseInt(dayStringArray[32]);
+      vaccDay = new VaccinationDay(dayDateFromString, dosesCumul, dosesDiffPrev, dosesFirstDiffPrev,
+          dosesSecondDiffPrev, dosesBiontechCumul, dosesModernaCumul, dosesAstraZenecaCumul,
+          personsFirstCumul, personsFullCumul, vaccRateFirst, vaccRateFull, indicAgeDoses,
+          indicProfDoses, indicMedicalDoses, indicCareHomeDoses, indicAgeFirst, indicProfFirst,
+          indicMedicalFirst, indicCareHomeFirst, indicAgeFull, indicProfFull, indicMedicalFull,
+          indicCareHomeFull, dosesDimCumul, dosesKbvCumul, dosesJohnsonCumul, dosesBiontechFirstCumul,
+          dosesBiontechSecondCumul, dosesModernaFirstCumul, dosesModernaSecondCumul, dosesAstraZenecaFirstCumul,
+          dosesAstraZenecaSecondCumul);
       listOfDays.add(vaccDay);
       dayString = reader.readLine();
     }
